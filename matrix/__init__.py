@@ -1,29 +1,11 @@
-## Set Initial Variables ##
-import os # Miscellaneous operating system interface
-
-import time # Time access and conversions
-from random import randint # Random numbers
-import sys # System-specific parameters and functions
-
-import zmq # Asynchronous messaging framework
-from matrix_io.proto.malos.v1 import driver_pb2 # MATRIX Protocol Buffer driver library
-from matrix_io.proto.malos.v1 import io_pb2 # MATRIX Protocol Buffer sensor library
-from multiprocessing import Process, Manager, Value # Allow for multiple processes at once
-from zmq.eventloop import ioloop, zmqstream# Asynchronous events through ZMQ
-
-matrix_ip = '127.0.0.1' # Local device ip
-everloop_port = 20021 # Driver Base port
-led_count = 0 # Amount of LEDs on MATRIX device
-# Handy function for connecting to the Error port
-from matrix.utils import register_error_callback
-
+# -*- coding: utf-8 -*-
+import logging
 import paho.mqtt.client as mqtt
 import json
+#from matrix.everloop import Everloop
+#from matrix.test import Test
 
-
-class EverLoop:
-    def __init__(self):
-        print("")
+from matrix.matrixled import MatrixLed, get_led, LedRunner, colors
 
 class LedControl:
 
@@ -49,10 +31,16 @@ class LedControl:
     _SUB_ON_DND = 'hermes/leds/doNotDisturb'
     '''
 
-    def __init__(self, mqtt_host, mqtt_port, logger):
-        self._logger = logger
+    def __init__(self, mqtt_host, mqtt_port):
+        self._logger = logging.getLogger('LedControl')
         self._logger.info('Initializing')
         self._me = 'default'
+        #self.everloop = Everloop(0, '127.0.0.1', 20021)
+
+        self._matrix = MatrixLed()
+        self._runner = LedRunner()
+        self._matrix.connect()
+
         self.mqtt_client = None
         self.mqtt_host = mqtt_host
         self.mqtt_port = mqtt_port
@@ -86,15 +74,21 @@ class LedControl:
         }.get(event, self.unmanaged_event)
 
     def wakeup_event(self, payload):
+        #self._runner.start(self._matrix.loading_bar, colors['red'], colors['blue'], 0.5)
+        #self._runner.start(self._matrix.standby, colors['white'])
+        self._runner.once(self._matrix.fadeIn, colors['green'])
         self._logger.info("=> wakeup: {}".format(payload))
 
     def backtosleep_event(self, payload):
+        #self.everloop.clear()
+        self._runner.once(self._matrix.solid)
         self._logger.info("=> backtosleep: {}".format(payload))
 
     def listening_event(self, payload):
         self._logger.info("=> listening: {}".format(payload))
 
     def think_event(self, payload):
+        self._runner.start(self._matrix.wave, colors['blue'])
         self._logger.info("=> thinking: {}".format(payload))
 
     def tts_start_event(self, payload):
@@ -111,8 +105,6 @@ class LedControl:
 
     def play_finished_event(self, payload):
         self._logger.info("=> play finished: {}".format(payload))
-
-
 
     def unmanaged_event(self, payload):
         self._logger.info("=> unmanaged: {}".format(payload))
@@ -133,9 +125,15 @@ class LedControl:
         return mqtt_client
 
     def start(self):
+        #self.everloop.clear()
+        self._runner.once(self._matrix.solid)
         self.mqtt_client.connect(self.mqtt_host, self.mqtt_port, 60)
         self.mqtt_client.loop_start()
 
     def stop(self):
         self.mqtt_client.loop_stop()
         self.mqtt_client.disconnect()
+        self._runner.stop()
+        self._runner.once(self._matrix.solid)
+        self._matrix.disconnect()
+        #self.everloop.onStop()

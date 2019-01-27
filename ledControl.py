@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging.handlers
 import signal
 import time
@@ -18,10 +19,10 @@ def onStop():
 def main():
     signal.signal(signal.SIGINT, stopHandler)
     signal.signal(signal.SIGTERM, stopHandler)
-    led_control = LedControl('localhost', 1883, _logger)
-
+    led_control = None
     try:
         _logger.info('Starting LedControl')
+        led_control = LedControl('localhost', 1883)
         led_control.start()
         while RUNNING:
             time.sleep(0.1)
@@ -29,7 +30,8 @@ def main():
         pass
     finally:
         _logger.info('Shutting down Snips Led Control')
-        led_control.stop()
+        if led_control is not None:
+            led_control.stop()
 
 
 if __name__ == "__main__":
