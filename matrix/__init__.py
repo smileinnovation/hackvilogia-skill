@@ -98,9 +98,11 @@ class LedControl:
         self._logger.info("=> tts finished: {}".format(payload))
 
     def intent_error_event(self, payload):
+        self._runner.once(self._matrix.solid, colors['red'])
         self._logger.info("=> intent error: {}".format(payload))
 
     def intent_success_event(self, payload):
+        self._runner.once(self._matrix.solid, colors['blue'])
         self._logger.info("=> intent success: {}".format(payload))
 
     def play_finished_event(self, payload):

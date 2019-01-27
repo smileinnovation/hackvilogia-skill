@@ -38,6 +38,7 @@ class MatrixLed:
         context = zmq.Context()
         self.address = 'tcp://{0}:{1}'.format(matrix_ip, PORT)
         self.socket = context.socket(zmq.PUSH)
+        self.leds = [None] * 18
 
     def __show(self, leds):
         config = driver_pb2.DriverConfig()
@@ -52,10 +53,9 @@ class MatrixLed:
 
     def solid(self, color=_dark):
         """ Light all leds in single colour """
-        leds = []
         for led in range(LED_COUNT):
-            leds.append(color)
-        self.__show(leds)
+            self.leds[led] = color
+        self.__show(self.leds)
 
     def loading_bar(self, color, base=_dark, delay=0.01):
         """ Light one led at a time until all leds are lit """
@@ -67,19 +67,19 @@ class MatrixLed:
             count += 1
             lit_leds = [color for led in range(count)]
             base_leds = [base for led in range(LED_COUNT - count)]
-            leds = lit_leds + base_leds
-            self.__show(leds)
+            self.leds = lit_leds + base_leds
+            self.__show(self.leds)
             time.sleep(delay)
 
     def wave(self, color, delay=0.01):
-        leds = [None] * 18
+
         count = 0
         while count < LED_COUNT:
             for i in range(LED_COUNT):
                 led = (count + i) % LED_COUNT
                 coef = (1+math.cos(math.pi*(led/9)))/2
-                leds[i] = get_led(red=int(color.red*coef), green=int(color.green*coef), blue=int(color.blue*coef), white=int(color.white*coef))
-            self.__show(leds)
+                self.leds[i] = get_led(red=int(color.red*coef), green=int(color.green*coef), blue=int(color.blue*coef), white=int(color.white*coef))
+            self.__show(self.leds)
             count += 1
             time.sleep(delay)
 
@@ -91,13 +91,16 @@ class MatrixLed:
         red = blue = green = white = 0
         for i in range(steps):
             current_color = get_led(red=int(red), green=int(green), blue=int(blue), white=int(white))
-            leds = [current_color for led in range(LED_COUNT)]
-            self.__show(leds)
+            self.leds = [current_color for led in range(LED_COUNT)]
+            self.__show(self.leds)
             red += red_incr
             green += green_incr
             blue += blue_incr
             white += white_incr
             time.sleep(delay)
+
+    def switchoff(self):
+        pass
 
     def standby(self, color, delay=0.5):
         global current_led_index
@@ -110,9 +113,9 @@ class MatrixLed:
         if position < 0 or position >= LED_COUNT:
             self.disconnect()
             sys.exit('Position must be a number between 0 and {}'.format(LED_COUNT-1))
-        leds = [self._dark for led in range(LED_COUNT)]
-        leds[position] = color
-        self.__show(leds)
+        self.leds = [self._dark for led in range(LED_COUNT)]
+        self.leds[position] = color
+        self.__show(self.leds)
 
 
 class LedRunner:
