@@ -40,9 +40,9 @@ class MatrixLed:
         self.socket = context.socket(zmq.PUSH)
         self.leds = [None] * 18
 
-    def __show(self, leds):
+    def __show(self):
         config = driver_pb2.DriverConfig()
-        config.image.led.extend(leds)
+        config.image.led.extend(self.leds)
         self.socket.send(config.SerializeToString())
 
     def connect(self):
@@ -55,7 +55,7 @@ class MatrixLed:
         """ Light all leds in single colour """
         for led in range(LED_COUNT):
             self.leds[led] = color
-        self.__show(self.leds)
+        self.__show()
 
     def loading_bar(self, color, base=_dark, delay=0.01):
         """ Light one led at a time until all leds are lit """
@@ -68,18 +68,17 @@ class MatrixLed:
             lit_leds = [color for led in range(count)]
             base_leds = [base for led in range(LED_COUNT - count)]
             self.leds = lit_leds + base_leds
-            self.__show(self.leds)
+            self.__show()
             time.sleep(delay)
 
     def wave(self, color, delay=0.01):
-
         count = 0
         while count < LED_COUNT:
             for i in range(LED_COUNT):
                 led = (count + i) % LED_COUNT
                 coef = (1+math.cos(math.pi*(led/9)))/2
                 self.leds[i] = get_led(red=int(color.red*coef), green=int(color.green*coef), blue=int(color.blue*coef), white=int(color.white*coef))
-            self.__show(self.leds)
+            self.__show()
             count += 1
             time.sleep(delay)
 
@@ -92,15 +91,33 @@ class MatrixLed:
         for i in range(steps):
             current_color = get_led(red=int(red), green=int(green), blue=int(blue), white=int(white))
             self.leds = [current_color for led in range(LED_COUNT)]
-            self.__show(self.leds)
+            self.__show()
             red += red_incr
             green += green_incr
             blue += blue_incr
             white += white_incr
             time.sleep(delay)
 
-    def switchoff(self):
-        pass
+    def shutdown(self, delay=0.01, steps=100):
+        max_color = 0
+        for ledValue in self.leds:
+            m = max(ledValue.red, ledValue.green, ledValue.blue, ledValue.white)
+            max_color = max(max_color, m)
+        incr = max_color / steps
+        for i in range(steps):
+            for index, ledValue in enumerate(self.leds):
+                red = int(ledValue.red - incr)
+                red = red if red > 0 else 0
+                green = int(ledValue.green - incr)
+                green = green if green > 0 else 0
+                blue = int(ledValue.blue - incr)
+                blue = blue if blue > 0 else 0
+                white = int(ledValue.white - incr)
+                white = white if white > 0 else 0
+                new_color = get_led(red=red, green=green, blue=blue, white=white)
+                self.leds[index] = new_color
+            self.__show()
+            time.sleep(delay)
 
     def standby(self, color, delay=0.5):
         global current_led_index
@@ -115,7 +132,7 @@ class MatrixLed:
             sys.exit('Position must be a number between 0 and {}'.format(LED_COUNT-1))
         self.leds = [self._dark for led in range(LED_COUNT)]
         self.leds[position] = color
-        self.__show(self.leds)
+        self.__show()
 
 
 class LedRunner:

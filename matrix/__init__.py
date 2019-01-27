@@ -80,16 +80,22 @@ class LedControl:
         self._logger.info("=> wakeup: {}".format(payload))
 
     def backtosleep_event(self, payload):
-        #self.everloop.clear()
-        self._runner.once(self._matrix.solid)
+        self._runner.once(self._matrix.shutdown)
         self._logger.info("=> backtosleep: {}".format(payload))
 
     def listening_event(self, payload):
         self._logger.info("=> listening: {}".format(payload))
 
     def think_event(self, payload):
-        self._runner.start(self._matrix.wave, colors['blue'])
         self._logger.info("=> thinking: {}".format(payload))
+        likelihood = 0
+        if payload is not None and 'likelihood' in payload:
+            likelihood = payload['likelihood']
+
+        if likelihood == 0:
+            self._runner.once(self._matrix.solid, colors['red'])
+        else:
+            self._runner.start(self._matrix.wave, colors['blue'])
 
     def tts_start_event(self, payload):
         self._logger.info("=> tts start: {}".format(payload))
