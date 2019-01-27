@@ -4,9 +4,12 @@ import signal
 import time
 from matrix import LedControl
 
+formatter = logging.Formatter('%(asctime)s [%(threadName)s] - [%(levelname)s] - %(message)s')
+
 _logger = logging.getLogger('LedControl')
 _logger.setLevel(logging.DEBUG)
 streamHandler = logging.StreamHandler()
+streamHandler.setFormatter(formatter)
 _logger.addHandler(streamHandler)
 
 def stopHandler(signum, frame):
@@ -29,7 +32,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        _logger.info('Shutting down Snips Led Control')
+        _logger.info('Shutting down LedControl')
         if led_control is not None:
             led_control.stop()
 

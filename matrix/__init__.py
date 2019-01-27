@@ -2,10 +2,8 @@
 import logging
 import paho.mqtt.client as mqtt
 import json
-#from matrix.everloop import Everloop
-#from matrix.test import Test
-
 from matrix.matrixled import MatrixLed, get_led, LedRunner, colors
+
 
 class LedControl:
 
@@ -35,7 +33,6 @@ class LedControl:
         self._logger = logging.getLogger('LedControl')
         self._logger.info('Initializing')
         self._me = 'default'
-        #self.everloop = Everloop(0, '127.0.0.1', 20021)
 
         self._matrix = MatrixLed()
         self._runner = LedRunner()
@@ -74,8 +71,6 @@ class LedControl:
         }.get(event, self.unmanaged_event)
 
     def wakeup_event(self, payload):
-        #self._runner.start(self._matrix.loading_bar, colors['red'], colors['blue'], 0.5)
-        #self._runner.start(self._matrix.standby, colors['white'])
         self._runner.once(self._matrix.fadeIn, colors['green'])
         self._logger.info("=> wakeup: {}".format(payload))
 
@@ -133,7 +128,6 @@ class LedControl:
         return mqtt_client
 
     def start(self):
-        #self.everloop.clear()
         self._runner.once(self._matrix.solid)
         self.mqtt_client.connect(self.mqtt_host, self.mqtt_port, 60)
         self.mqtt_client.loop_start()
@@ -144,4 +138,3 @@ class LedControl:
         self._runner.stop()
         self._runner.once(self._matrix.solid)
         self._matrix.disconnect()
-        #self.everloop.onStop()

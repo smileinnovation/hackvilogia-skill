@@ -76,8 +76,8 @@ class MatrixLed:
         while count < LED_COUNT:
             for i in range(LED_COUNT):
                 led = (count + i) % LED_COUNT
-                coef = (1+math.cos(math.pi*(led/9)))/2
-                self.leds[i] = get_led(red=int(color.red*coef), green=int(color.green*coef), blue=int(color.blue*coef), white=int(color.white*coef))
+                r = (1+math.cos(math.pi*(led/9)))/2
+                self.leds[i] = get_led(red=int(color.red*r), green=int(color.green*r), blue=int(color.blue*r), white=int(color.white*r))
             self.__show()
             count += 1
             time.sleep(delay)
