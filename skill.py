@@ -3,6 +3,7 @@ import logging.handlers
 import signal
 import time
 from hackVilogiaSkill import HackVilogiaSkill
+from hackVilogiaSkill.hermes import EventBus
 
 formatter = logging.Formatter('%(asctime)s [%(threadName)s] - [%(levelname)s] - %(message)s')
 
@@ -25,19 +26,20 @@ def onStop():
 def main():
     signal.signal(signal.SIGINT, stopHandler)
     signal.signal(signal.SIGTERM, stopHandler)
-    skill = None
+    eventBus = None
     try:
         _logger.info('Starting HackVilogiaSkill')
-        skill = HackVilogiaSkill('localhost', 1883)
-        skill.start()
+        skill = HackVilogiaSkill()
+        eventBus = EventBus('localhost', 1883, skill)
+        eventBus.start()
         while RUNNING:
             time.sleep(0.1)
     except KeyboardInterrupt:
         pass
     finally:
         _logger.info('Shutting down HackVilogiaSkill')
-        if skill is not None:
-            skill.stop()
+        if eventBus is not None:
+            eventBus.stop()
 
 
 if __name__ == "__main__":
