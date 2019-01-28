@@ -170,21 +170,22 @@ class IntentMessage:
         if payload is not None and 'sessionId' in payload:
             session_id = payload['sessionId']
 
-        if payload is not None and 'custom_data' in payload:
-            custom_data = payload['custom_data']
+        if payload is not None and 'customData' in payload:
+            custom_data = payload['customData']
 
         if payload is not None and 'input' in payload:
             input = payload['input']
 
-        if payload is not None and 'site_id' in payload:
-            site_id = payload['site_id']
+        if payload is not None and 'siteId' in payload:
+            site_id = payload['siteId']
         else:
             site_id = 'default'
 
         if payload is not None and 'slots' in payload:
-            slots = []
-            for index, slot in enumerate(payload['slots']):
-                slots.append(Slot.from_payload(slot))
+            slots = {}
+            for i, s in enumerate(payload['slots']):
+                slot = Slot.from_payload(s)
+                slots[slot.slotName] = slot
 
         if payload is not None and 'intent' in payload:
             intent = Intent.from_payload(payload['intent'])
