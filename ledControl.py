@@ -12,12 +12,15 @@ streamHandler = logging.StreamHandler()
 streamHandler.setFormatter(formatter)
 _logger.addHandler(streamHandler)
 
+
 def stopHandler(signum, frame):
     onStop()
+
 
 def onStop():
     global RUNNING
     RUNNING = False
+
 
 def main():
     signal.signal(signal.SIGINT, stopHandler)
