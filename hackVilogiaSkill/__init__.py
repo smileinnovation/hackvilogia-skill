@@ -39,11 +39,10 @@ class HackVilogiaSkill:
 
     def reduce_number(self, slot):
         if slot:
+            # If slot is a list of Number, we concatenate them to build a full number
+            # Ex: My number is 34 45 56 => 344556
             if isinstance(slot, list):
-                for s in slot:
-                    print(s.value)
-                return ''.join(list(map(lambda s: str(int(s.value)), slot)))
-
+                return ''.join(list(map(lambda s: str(abs(int(s.value))), slot)))
             else:
                 return str(int(slot.value))
 
