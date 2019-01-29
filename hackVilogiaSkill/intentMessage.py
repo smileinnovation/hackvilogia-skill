@@ -19,10 +19,10 @@ class Value:
         kind = None
         value = None
 
-        if payload is not None and payload['kind']:
+        if payload is not None and 'kind' in payload:
             kind = payload['kind']
 
-        if payload is not None and payload['value']:
+        if payload is not None and 'value' in payload:
             value = payload['value']
 
         return Value(kind, value)
@@ -185,7 +185,17 @@ class IntentMessage:
             slots = {}
             for i, s in enumerate(payload['slots']):
                 slot = Slot.from_payload(s)
-                slots[slot.slotName] = slot
+
+                if slot.slotName in slots:
+                    if isinstance(slots[slot.slotName], list):
+                        slots[slot.slotName].append(slot)
+                    else:
+                        tmp = slots[slot.slotName]
+                        slots[slot.slotName] = list()
+                        slots[slot.slotName].append(tmp)
+                        slots[slot.slotName].append(slot)
+                else:
+                    slots[slot.slotName] = slot
 
         if payload is not None and 'intent' in payload:
             intent = Intent.from_payload(payload['intent'])
@@ -221,6 +231,44 @@ Parsed intent payload sample:
             'confidence': 1.0
         }
     ]
+}
+
+---
+
+{
+    'id': '7340053d-3602-4d62-9595-bb741a916f1b', 
+    'input': 'mon num\xe9ro est le quatorze z\xe9ro quatre', 
+    'slots': [
+        {
+            'range': {'end': 26, 'start': 18}, 
+            'confidence': 1.0, 
+            'entity': 'snips/number', 
+            'rawValue': 'quatorze', 
+            'slotName': 'locataire', 
+            'value': {'kind': 'Number', 'value': 14.0}
+        }, 
+        {
+            'range': {'end': 31, 'start': 27}, 
+            'confidence': 1.0, 
+            'entity': 'snips/number', 
+            'rawValue': 'z\xe9ro', 
+            'slotName': 'locataire', 
+            'value': {'kind': 'Number', 'value': 0.0}
+        }, 
+        {
+            'range': {'end': 38, 'start': 32}, 
+            'confidence': 1.0, 
+            'entity': 'snips/number', 
+            'rawValue': 'quatre', 
+            'slotName': 'locataire', 
+            'value': {'kind': 'Number', 'value': 4.0}
+        }
+    ], 
+    'sessionId': 'fda22bcf-9f8d-4d9d-9dae-9145cab0bd82', 
+    'intent': {
+        'intentName': 'smilehack:numeroLocataire', 
+        'probability': 0.98502237
+    }
 }
 
 

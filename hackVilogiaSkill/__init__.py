@@ -5,8 +5,7 @@ from hackVilogiaSkill.message import Message
 SKILL_MESSAGES = {
     'fr': {
         'hello': [
-            "Salut biloute",
-            "Hey copain"
+            "Bonjour, votre numéro de téléphone se termine par le 04 45",
         ],
         'youAreWelcome': [
             "Mais de rien.",
@@ -34,8 +33,19 @@ class HackVilogiaSkill:
         return {
             'smilehack:smallTalk': self.small_talk,
             'smilehack:sayHowAreYou': self.how_are_you,
-            'smilehack:repondreOuiOuNon': self.yes_no
+            'smilehack:repondreOuiOuNon': self.yes_no,
+            'smilehack:numeroLocataire': self.numero_locataire
         }
+
+    def reduce_number(self, slot):
+        if slot:
+            if isinstance(slot, list):
+                for s in slot:
+                    print(s.value)
+                return ''.join(list(map(lambda s: str(int(s.value)), slot)))
+
+            else:
+                return str(int(slot.value))
 
     def yes_no(self, intent_message, dialog):
         self._logger.info("=> intent yes_no")
@@ -51,6 +61,11 @@ class HackVilogiaSkill:
         if intent_message.slots['hello']:
             #dialog.end_session(session_id=intent_message.session_id, text=self._message.get('hello'))
             dialog.continue_session(session_id=intent_message.session_id, text=self._message.get('hello'), intent_filter=['smilehack:repondreOuiOuNon'], custom_data="TESTCUSTOM")
+
+    def numero_locataire(self, intent_message, dialog):
+        self._logger.info("=> intent numero_locataire")
+        number = self.reduce_number(intent_message.slots['locataire'])
+        print(number)
 
     def unmanaged_event(self, intent_message, dialog):
         self._logger.info("=> intent unknown")

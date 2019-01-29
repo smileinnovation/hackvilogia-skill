@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys
+import traceback
 import logging
 import paho.mqtt.client as mqtt
 import json
@@ -81,10 +81,8 @@ class EventBus:
                     intent_message = IntentMessage.from_payload(payload)
                     self.intent_to_func(intent_message.intent.intentName)(intent_message, self.dialog)
 
-            except Exception as e:
-                print(e)
-                type, value, traceback = sys.exc_info()
-                print('Error opening %s: %s' % (value.filename, value.strerror))
+            except Exception:
+                print(traceback.format_exc())
 
     def connect(self):
         mqtt_client = mqtt.Client()
