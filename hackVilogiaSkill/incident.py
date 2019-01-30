@@ -23,14 +23,14 @@ class HousingType(str, Enum):
 
 
 class Incident:
-    def __init__(self, incidentType, user_input):
+    def __init__(self, category, incidentType, user_input):
         self.incidentType = incidentType
         self.emergencyLevel = EmergencyLevel.Regular
         self.sentiment = Sentiment.Neutral
         self.user_input = user_input
         self.client = None
         self.housingType = HousingType.Individual
-        self.incidentCategories = []
+        self.category = category
         self.incidentPlace = None
         self.incidentKeywords = []
         self.equipments = []
@@ -49,9 +49,6 @@ class Incident:
 
     def setHousingType(self, housingType):
         self.housingType = housingType
-
-    def setIncidentCategories(self, incidentCategories):
-        self.incidentCategories = incidentCategories
 
     def setIncidentPlace(self, incidentPlace):
         self.incidentPlace = incidentPlace

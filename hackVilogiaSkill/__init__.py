@@ -42,6 +42,9 @@ SKILL_MESSAGES = {
     }
 }
 
+INTENT_YES = 'smilehack:Yes'
+INTENT_NO = 'smilehack:No'
+
 
 class HackVilogiaSkill:
     def __init__(self):
@@ -57,7 +60,8 @@ class HackVilogiaSkill:
         return {
             'smilehack:smallTalk': self.small_talk,
             'smilehack:sayHowAreYou': self.how_are_you,
-            'smilehack:repondreOuiOuNon': self.yes_no,
+            INTENT_YES: self.yes_no,
+            INTENT_NO: self.yes_no,
             'smilehack:numeroLocataire': self.numero_locataire,
             'smilehack:pasNumeroClient': self.pas_numero_locataire,
             'smilehack:InfoLoyerCharge': self.info_loyer_charge,
@@ -73,8 +77,8 @@ class HackVilogiaSkill:
             else:
                 return str(int(slot.value))
 
-    def set_new_incident(self, incidentType, user_input):
-        self._current_incident = Incident(incidentType, user_input)
+    def set_new_incident(self, category, incidentType, user_input):
+        self._current_incident = Incident(category, incidentType, user_input)
 
     def set_incident_client(self):
         self._current_incident.setClient(self._current_client)
@@ -111,23 +115,26 @@ class HackVilogiaSkill:
     def yes_no(self, intent_message, dialog):
         self._logger.info("=> intent yes_no")
         self._logger.info("Custom data: {}".format(intent_message.custom_data))
-
         custom_data = intent_message.custom_data
-        if custom_data is not None:
-            if custom_data == 'CONFIRM_CLIENT_PHONE_NUMBER':
-                if 'reponse' in intent_message.slots:
-                    if intent_message.slots['reponse'].value == 'oui':
-                        message = self._message.get('transfer_to_tech_support') if self._current_incident.incidentType == IncidentType.Technical else self._message.get('transfer_to_sale_support')
-                        dialog.end_session(session_id=intent_message.session_id, text=message)
-                        self.set_incident_client()
-                        self.send_incident()
-                        self.clear_incident()
-                    else:
-                        dialog.continue_session(session_id=intent_message.session_id,
-                                                text=self._message.get('ask_for_numero_client'),
-                                                intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
-                                                               'smilehack:smallTalk']
-                                                )
+
+        if intent_message.intent.intentName == INTENT_YES:
+            if custom_data is not None:
+                if custom_data == 'CONFIRM_CLIENT_PHONE_NUMBER':
+                    message = self._message.get(
+                        'transfer_to_tech_support') if self._current_incident.incidentType == IncidentType.Technical else self._message.get(
+                        'transfer_to_sale_support')
+                    dialog.end_session(session_id=intent_message.session_id, text=message)
+                    self.set_incident_client()
+                    self.send_incident()
+                    self.clear_incident()
+        else:
+            if custom_data is not None:
+                if custom_data == 'CONFIRM_CLIENT_PHONE_NUMBER':
+                    dialog.continue_session(session_id=intent_message.session_id,
+                                                        text=self._message.get('ask_for_numero_client'),
+                                                        intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
+                                                                       'smilehack:smallTalk']
+                                                        )
 
     def numero_locataire(self, intent_message, dialog):
         self._logger.info("=> intent numero_locataire")
@@ -140,7 +147,7 @@ class HackVilogiaSkill:
             dialog.start_session_action(site_id='default',
                                         text=self._message.get('confirmClientPhoneNumber').format(client['phone'][-2:]),
                                         custom_data='CONFIRM_CLIENT_PHONE_NUMBER',
-                                        intent_filter=['smilehack:repondreOuiOuNon', 'smilehack:smallTalk'],
+                                        intent_filter=[INTENT_YES, INTENT_NO, 'smilehack:smallTalk'],
                                         can_be_enqueued=True
                                         )
         else:
@@ -186,7 +193,8 @@ class HackVilogiaSkill:
     def info_loyer_charge(self, intent_message, dialog):
         self._logger.info("=> intent info_loyer_charge")
 
-        self.set_new_incident(IncidentType.Sales, intent_message.input)
+        self.set_new_incident(intent_message.intent.intentName, IncidentType.Sales, intent_message.input)
+
         if intent_message.slots is not None:
             print("----")
             self.display_slots(intent_message.slots)
@@ -200,8 +208,7 @@ class HackVilogiaSkill:
     def plomberie(self, intent_message, dialog):
         self._logger.info("=> intent plomberie")
 
-        self.set_new_incident(IncidentType.Technical, intent_message.input)
-
+        self.set_new_incident(intent_message.intent.intentName, IncidentType.Technical, intent_message.input)
         self.fillArrayValueInIncident(intent_message.slots, 'Equipement', self._current_incident.setEquipments)
 
         if intent_message.slots is not None:
@@ -215,6 +222,10 @@ class HackVilogiaSkill:
 
 
 '''
+
+2019-01-30 19:42:18,353 [Thread-1] - [INFO] - => intent numero_locataire
+-100
+
 
 Equipement : Custom / ma baignoire / ma baignoire
 ProblemeEmplacement : Custom / logement / logement
