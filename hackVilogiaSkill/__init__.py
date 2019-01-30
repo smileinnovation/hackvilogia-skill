@@ -166,7 +166,7 @@ class HackVilogiaSkill:
             return self.unmanaged_event(intent_message, dialog)
 
         self._logger.info("=> intent numero_locataire")
-        number = self.reduce_number(intent_message.slots['locataire'])
+        number = self.reduce_number(intent_message.slots['Locataire'])
         print(number)
         client = ClientMock.client_by_id(number)
         if client is not None:
