@@ -17,11 +17,6 @@ class Sentiment(str, Enum):
     Annoyed = 'annoyed'
 
 
-class IncidentPlace(str, Enum):
-    Individual = 'individual'
-    Mutual = 'mutual'
-
-
 class Incident:
     def __init__(self, category, incidentType, user_input):
         self.incidentType = incidentType
@@ -30,7 +25,7 @@ class Incident:
         self.user_input = user_input
         self.client = None
         self.category = category
-        self.incidentPlace = IncidentPlace.Individual
+        self.incidentPlace = []
         self.incidentKeywords = []
         self.equipments = []
 

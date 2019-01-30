@@ -2,7 +2,7 @@
 import logging
 from hackVilogiaSkill.message import Message
 from hackVilogiaSkill.clients import ClientMock
-from hackVilogiaSkill.incident import Incident, IncidentType, EmergencyLevel
+from hackVilogiaSkill.incident import Incident, IncidentType, EmergencyLevel, Sentiment
 
 SKILL_MESSAGES = {
     'fr': {
@@ -72,7 +72,7 @@ class HackVilogiaSkill:
             'smilehack:numeroLocataire': self.numero_locataire,
             'smilehack:pasNumeroClient': self.pas_numero_locataire,
             'smilehack:InfoLoyerCharge': self.info_loyer_charge,
-            'smilehack:problemePlomberieSanitaire': self.plomberie
+            'smilehack:MultiService': self.multiservice
         }
 
     def reduce_number(self, slot):
@@ -88,7 +88,14 @@ class HackVilogiaSkill:
         self._current_incident = Incident(intent_message.intent.intentName, incidentType, intent_message.input)
 
         if 'Sentiment' in intent_message.slots:
-            print(intent_message.slots['Sentiment'].value)
+            s = ''
+            if isinstance(intent_message.slots['Sentiment'], list):
+                s = intent_message.slots['Sentiment'][0].value
+            else:
+                s = intent_message.slots['Sentiment'].value
+
+            if s == 'énervé':
+                self._current_incident.setSentiment(Sentiment.Annoyed)
 
     def set_incident_client(self):
         self._current_incident.setClient(self._current_client)
@@ -125,7 +132,7 @@ class HackVilogiaSkill:
                                 text='{0} {1}'.format(self._message.get('unknownSmallTalk'), self._message.get('mission')),
                                 intent_filter=[
                                                 'smilehack:InfoLoyerCharge',
-                                                'smilehack:problemePlomberieSanitaire',
+                                                'smilehack:MultiService',
                                                 'smilehack:smallTalk'
                                 ])
         self.clear_incident()
@@ -233,8 +240,8 @@ class HackVilogiaSkill:
                                                INTENT_NO, 'smilehack:smallTalk']
                                 )
 
-    def plomberie(self, intent_message, dialog):
-        self._logger.info("=> intent plomberie")
+    def multiservice(self, intent_message, dialog):
+        self._logger.info("=> intent multiservice")
 
         self.set_new_incident(intent_message, IncidentType.Technical)
         self.fillArrayValueInIncident(intent_message.slots, 'Equipement', self._current_incident.setEquipments)
