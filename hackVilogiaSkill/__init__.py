@@ -85,7 +85,7 @@ class HackVilogiaSkill:
                 return str(int(slot.value))
 
     def set_new_incident(self, intent_message, incidentType):
-        self._current_incident = Incident(intent_message.intent.intentName, incidentType, intent_message.input)
+        self._current_incident = Incident(incidentType, intent_message.input)
 
         if 'Sentiment' in intent_message.slots:
             s = ''
@@ -218,12 +218,19 @@ class HackVilogiaSkill:
                                                      v.value,
                                                      v.rawValue))
 
-    def fillArrayValueInIncident(self, slots, slotName, func):
+    def setArrayValueInIncident(self, slots, slotName, func):
         if slotName in slots:
             if isinstance(slots[slotName], list):
                 func(list(map(lambda e: e.value, slots[slotName])))
             else:
                 func([slots[slotName].value])
+
+    def setArrayKeyValueInIncident(self, slots, slotName, func):
+        if slotName in slots:
+            if isinstance(slots[slotName], list):
+                func(list(map(lambda e: { slotName : e.value } , slots[slotName])))
+            else:
+                func([ { slotName : slots[slotName].value } ])
 
     def info_loyer_charge(self, intent_message, dialog):
         self._logger.info("=> intent info_loyer_charge")
@@ -242,9 +249,11 @@ class HackVilogiaSkill:
 
     def multiservice(self, intent_message, dialog):
         self._logger.info("=> intent multiservice")
-
         self.set_new_incident(intent_message, IncidentType.Technical)
-        self.fillArrayValueInIncident(intent_message.slots, 'Equipement', self._current_incident.setEquipments)
+        self.setArrayValueInIncident(intent_message.slots, 'Equipement', self._current_incident.setEquipments)
+        self.setArrayValueInIncident(intent_message.slots, 'ProblemeEmplacement', self._current_incident.setPlaces)
+        self.setArrayKeyValueInIncident(intent_message.slots, 'PlomberieSanitaireRobinetterie', self._current_incident.setCategories)
+        self.setArrayKeyValueInIncident(intent_message.slots, 'MenuiserieBoisPvcAlu', self._current_incident.setCategories)
 
         if intent_message.slots is not None:
             print("----")

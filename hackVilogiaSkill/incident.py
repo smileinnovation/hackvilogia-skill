@@ -18,15 +18,14 @@ class Sentiment(str, Enum):
 
 
 class Incident:
-    def __init__(self, category, incidentType, user_input):
+    def __init__(self, incidentType, user_input):
         self.incidentType = incidentType
         self.emergencyLevel = EmergencyLevel.Regular
         self.sentiment = Sentiment.Neutral
         self.user_input = user_input
         self.client = None
-        self.category = category
-        self.incidentPlace = []
-        self.incidentKeywords = []
+        self.categories = []
+        self.places = []
         self.equipments = []
 
     def to_JSON(self):
@@ -41,17 +40,14 @@ class Incident:
     def setInput(self, input):
         self.input = input
 
-    def setHousingType(self, housingType):
-        self.housingType = housingType
+    def setCategories(self, categories):
+        self.categories = self.categories + categories
 
-    def setIncidentPlace(self, incidentPlace):
-        self.incidentPlace = incidentPlace
-
-    def setIncidentKeywords(self, incidentKeywords):
-        self.incidentKeywords = incidentKeywords
+    def setPlaces(self, places):
+        self.places = self.places + places
 
     def setEquipments(self, equipments):
-        self.equipments = equipments
+        self.equipments = self.equipments + equipments
 
     def setClient(self, client):
         self.client = client
