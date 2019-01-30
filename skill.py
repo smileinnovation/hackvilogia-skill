@@ -4,6 +4,7 @@ import signal
 import time
 from hackVilogiaSkill import HackVilogiaSkill
 from hackVilogiaSkill.hermes import EventBus
+from hackVilogiaSkill.incident import Incident, IncidentType
 
 formatter = logging.Formatter('%(asctime)s [%(threadName)s] - [%(levelname)s] - %(message)s')
 

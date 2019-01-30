@@ -11,9 +11,6 @@ class Dialog:
         self._mqtt_client = mqtt_client
 
     def start_session_action(self, site_id = None, text = None, custom_data = None, can_be_enqueued = False, intent_filter = None):
-
-        print("Hey!")
-
         payload = {
             'init':{
                 'type':'action',
@@ -24,9 +21,6 @@ class Dialog:
         if text is not None: payload['init']['text'] = text
         if custom_data is not None: payload['customData'] = custom_data
         if intent_filter is not None: payload['init']['intentFilter'] = intent_filter
-
-        print(payload)
-
         self._mqtt_client.publish('hermes/dialogueManager/startSession', json.dumps(payload))
 
     def continue_session(self, session_id, text, custom_data = None, intent_filter = None):
