@@ -11,6 +11,9 @@ class Dialog:
         self._mqtt_client = mqtt_client
 
     def start_session_action(self, site_id = None, text = None, custom_data = None, can_be_enqueued = False, intent_filter = None):
+
+        print("Hey!")
+
         payload = {
             'init':{
                 'type':'action',
@@ -21,6 +24,9 @@ class Dialog:
         if text is not None: payload['init']['text'] = text
         if custom_data is not None: payload['customData'] = custom_data
         if intent_filter is not None: payload['init']['intentFilter'] = intent_filter
+
+        print(payload)
+
         self._mqtt_client.publish('hermes/dialogueManager/startSession', json.dumps(payload))
 
     def continue_session(self, session_id, text, custom_data = None, intent_filter = None):
@@ -97,3 +103,18 @@ class EventBus:
     def stop(self):
         self.mqtt_client.loop_stop()
         self.mqtt_client.disconnect()
+
+
+'''
+
+{
+    'init': {
+        'intentFilter': ['smilehack:repondreOuiOuNon'], 
+        'text': 'pouvez-vous me confirmer que votre numéro de téléphone se termine par 03 ?', 
+        'type': 'action', 
+        'canBeEnqueued': False
+    }, 
+    'customData': 'CONFIRM_CLIENT_PHONE_NUMBER'
+}
+
+'''

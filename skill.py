@@ -27,6 +27,7 @@ def main():
     signal.signal(signal.SIGINT, stopHandler)
     signal.signal(signal.SIGTERM, stopHandler)
     eventBus = None
+
     try:
         _logger.info('Starting HackVilogiaSkill')
         skill = HackVilogiaSkill()
