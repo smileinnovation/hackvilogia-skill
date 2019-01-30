@@ -88,13 +88,6 @@ class HackVilogiaSkill:
         self._current_incident = Incident(incidentType, intent_message.input)
 
         if 'Sentiment' in intent_message.slots:
-            s = ''
-            if isinstance(intent_message.slots['Sentiment'], list):
-                s = intent_message.slots['Sentiment'][0].value
-            else:
-                s = intent_message.slots['Sentiment'].value
-
-            if s == 'énervé':
                 self._current_incident.setSentiment(Sentiment.Annoyed)
 
     def set_incident_client(self):
