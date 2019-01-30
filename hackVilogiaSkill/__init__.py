@@ -48,6 +48,7 @@ class HackVilogiaSkill:
         self._logger = logging.getLogger('HackVilogiaSkill')
         self._message = Message(SKILL_MESSAGES)
         self._current_incident = None
+        self._current_client = None
 
     def fallback_handler(self):
         return self.unmanaged_event
@@ -72,11 +73,15 @@ class HackVilogiaSkill:
             else:
                 return str(int(slot.value))
 
-    def set_new_incident(self, incidentType):
-        self._current_incident = Incident(incidentType)
+    def set_new_incident(self, incidentType, user_input):
+        self._current_incident = Incident(incidentType, user_input)
+
+    def set_incident_client(self):
+        self._current_incident.setClient(self._current_client)
 
     def clear_incident(self):
         self._current_incident = None
+        self._current_client = None
 
     def send_incident(self):
         print(self._current_incident.to_JSON())
@@ -88,14 +93,14 @@ class HackVilogiaSkill:
     def small_talk(self, intent_message, dialog):
         self._logger.info("=> intent small_talk")
 
-        if intent_message.slots['hello']:
+        if 'hello' in intent_message.slots:
             dialog.continue_session(session_id=intent_message.session_id, text=self._message.get('hello'))
 
-        if intent_message.slots['bye']:
+        if 'bye' in intent_message.slots:
             dialog.end_session(session_id=intent_message.session_id, text=self._message.get('bye'))
             self.clear_incident()
 
-        if intent_message.slots['thanks']:
+        if 'thanks' in intent_message.slots:
             dialog.continue_session(session_id=intent_message.session_id, text=self._message.get('thanks'))
 
     def unmanaged_event(self, intent_message, dialog):
@@ -110,10 +115,19 @@ class HackVilogiaSkill:
         custom_data = intent_message.custom_data
         if custom_data is not None:
             if custom_data == 'CONFIRM_CLIENT_PHONE_NUMBER':
-                message = self._message.get('transfer_to_tech_support') if self._current_incident.incidentType == IncidentType.Technical else self._message.get('transfer_to_sale_support')
-                dialog.end_session(session_id=intent_message.session_id, text=message)
-                self.send_incident()
-                self.clear_incident()
+                if 'reponse' in intent_message.slots:
+                    if intent_message.slots['reponse'].value == 'oui':
+                        message = self._message.get('transfer_to_tech_support') if self._current_incident.incidentType == IncidentType.Technical else self._message.get('transfer_to_sale_support')
+                        dialog.end_session(session_id=intent_message.session_id, text=message)
+                        self.set_incident_client()
+                        self.send_incident()
+                        self.clear_incident()
+                    else:
+                        dialog.continue_session(session_id=intent_message.session_id,
+                                                text=self._message.get('ask_for_numero_client'),
+                                                intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
+                                                               'smilehack:smallTalk']
+                                                )
 
     def numero_locataire(self, intent_message, dialog):
         self._logger.info("=> intent numero_locataire")
@@ -121,6 +135,7 @@ class HackVilogiaSkill:
         print(number)
         client = ClientMock.client_by_id(number)
         if client is not None:
+            self._current_client = client
             dialog.end_session(session_id=intent_message.session_id, text='Bonjour {0} {1}'.format(client['firstName'], client['lastName']))
             dialog.start_session_action(site_id='default',
                                         text=self._message.get('confirmClientPhoneNumber').format(client['phone'][-2:]),
@@ -161,13 +176,21 @@ class HackVilogiaSkill:
                                                      v.value,
                                                      v.rawValue))
 
+    def fillArrayValueInIncident(self, slots, slotName, func):
+        if slotName in slots:
+            if isinstance(slots[slotName], list):
+                func(list(map(lambda e: e.value, slots[slotName])))
+            else:
+                func([slots[slotName].value])
+
     def info_loyer_charge(self, intent_message, dialog):
         self._logger.info("=> intent info_loyer_charge")
 
-        self.set_new_incident(IncidentType.Sales)
+        self.set_new_incident(IncidentType.Sales, intent_message.input)
+        if intent_message.slots is not None:
+            print("----")
+            self.display_slots(intent_message.slots)
 
-        print("++++")
-        print(intent_message.input)
         dialog.continue_session(session_id=intent_message.session_id,
                                 text=self._message.get('ask_for_numero_client'),
                                 intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
@@ -177,10 +200,10 @@ class HackVilogiaSkill:
     def plomberie(self, intent_message, dialog):
         self._logger.info("=> intent plomberie")
 
-        self.set_new_incident(IncidentType.Technical)
+        self.set_new_incident(IncidentType.Technical, intent_message.input)
 
-        print("++++")
-        print(intent_message.input)
+        self.fillArrayValueInIncident(intent_message.slots, 'Equipement', self._current_incident.setEquipments)
+
         if intent_message.slots is not None:
             print("----")
             self.display_slots(intent_message.slots)
@@ -192,6 +215,14 @@ class HackVilogiaSkill:
 
 
 '''
+
+Equipement : Custom / ma baignoire / ma baignoire
+ProblemeEmplacement : Custom / logement / logement
+PlomberieSanitaireRobinetterie :
+  - Custom / robinetterie / robinetterie
+  - Custom / tuyau / tuyau
+
+
         self._logger.info(intent_message.session_id)
         self._logger.info(intent_message.custom_data)
         self._logger.info(intent_message.site_id)
@@ -202,57 +233,4 @@ class HackVilogiaSkill:
         self._logger.info(intent_message.slots['slotName'].slotName)
         self._logger.info(intent_message.slots['slotName'].kind)
         self._logger.info(intent_message.slots['slotName'].value)
-'''
-
-'''
-BUG
-
-j' ai un bouchon dans la tuyauterie mon robinet
-----
-Traceback (most recent call last):
-  File "/home/pi/hackathon/hackvilogia-skill/hackVilogiaSkill/hermes.py", line 82, in on_message
-    self.intent_to_func(intent_message.intent.intentName)(intent_message, self.dialog)
-  File "/home/pi/hackathon/hackvilogia-skill/hackVilogiaSkill/__init__.py", line 175, in plomberie
-    print('{0} : {1} / {2} / {3}'.format(slot, intent_message.slots[slot].kind, intent_message.slots[slot].value, intent_message.slots[slot].rawValue))
-AttributeError: 'list' object has no attribute 'kind'
-
-
-PlomberieSanitaireRobinetterie : Custom / débouchage d'evier / débouchage d' evier
-2019-01-30 16:41:41,843 [Thread-1] - [INFO] - => intent plomberie
-++++
-j' ai une fuite goutte à goutte
-----
-Traceback (most recent call last):
-  File "/home/pi/hackathon/hackvilogia-skill/hackVilogiaSkill/hermes.py", line 82, in on_message
-    self.intent_to_func(intent_message.intent.intentName)(intent_message, self.dialog)
-  File "/home/pi/hackathon/hackvilogia-skill/hackVilogiaSkill/__init__.py", line 175, in plomberie
-    print('{0} : {1} / {2} / {3}'.format(slot, intent_message.slots[slot].kind, intent_message.slots[slot].value, intent_message.slots[slot].rawValue))
-AttributeError: 'list' object has no attribute 'kind'
-
-
-[16:41:41] [Nlu] was asked to parse input "j' ai une fuite goutte à goutte"
-[16:41:41] [Nlu] detected intent smilehack:problemePlomberieSanitaire with probability 0.961 for input "j' ai une fuite goutte à goutte"
-              Slots ->
-                 PlomberieSanitaireRobinetterie -> fuite (confidence: 1.000)
-                 PlomberieSanitaireRobinetterie -> goutte à goutte. (confidence: 1.000)
-[16:41:41] [Dialogue] New intent detected smilehack:problemePlomberieSanitaire with probability 0.961
-              Slots ->
-                 PlomberieSanitaireRobinetterie -> fuite (confidence: 1.000)
-                 PlomberieSanitaireRobinetterie -> goutte à goutte. (confidence: 1.000)
-[16:41:47] [Dialogue] session with id '53144001-ecae-42a4-8ec2-d323c0a3e1b2' was ended on site default. The session was ended because one of the component didn't respond in a timely manner
-[16:41:47] [Asr] was asked to stop listening on site default    
-
-[16:44:11] [Nlu] detected intent smilehack:problemePlomberieSanitaire with probability 1.000 for input "mon chauffage est en panne les tuyaux sont chauds mais pas le chauffage"
-              Slots ->
-                 PlomberieSanitaireRobinetterie -> chauffage (confidence: 1.000)
-                 PlomberieSanitaireRobinetterie -> tuyaux (confidence: 0.500)
-                 PlomberieSanitaireRobinetterie -> chauffage (confidence: 1.000)
-[16:44:11] [Dialogue] New intent detected smilehack:problemePlomberieSanitaire with probability 1.000
-              Slots ->
-                 PlomberieSanitaireRobinetterie -> chauffage (confidence: 1.000)
-                 PlomberieSanitaireRobinetterie -> tuyaux (confidence: 0.500)
-                 PlomberieSanitaireRobinetterie -> chauffage (confidence: 1.000)
-[16:44:16] [Dialogue] session with id 'd3ee448a-9da1-4099-912e-741183f6e998' was ended on site default. The session was ended because one of the component didn't respond in a timely manner
-
-
 '''
