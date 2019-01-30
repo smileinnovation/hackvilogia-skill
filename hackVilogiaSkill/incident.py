@@ -17,7 +17,7 @@ class Sentiment(str, Enum):
     Annoyed = 'annoyed'
 
 
-class HousingType(str, Enum):
+class IncidentPlace(str, Enum):
     Individual = 'individual'
     Mutual = 'mutual'
 
@@ -29,9 +29,8 @@ class Incident:
         self.sentiment = Sentiment.Neutral
         self.user_input = user_input
         self.client = None
-        self.housingType = HousingType.Individual
         self.category = category
-        self.incidentPlace = None
+        self.incidentPlace = IncidentPlace.Individual
         self.incidentKeywords = []
         self.equipments = []
 
