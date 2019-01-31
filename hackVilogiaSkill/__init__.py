@@ -41,10 +41,13 @@ SKILL_MESSAGES = {
             'Désolé, mais je ne trouve pas de client avec le numéro {}'
         ],
         'transfer_to_tech_support': [
-            'Très bien {}, votre demande concerne un problème lié au {}. Nous transférons votre demande au service technique concerné'
+            'Nous transférons votre demande au service technique concerné'
         ],
         'transfer_to_sale_support': [
-            'Très bien {}, votre demande concerne un problème lié au {}. Nous transférons votre demande au service commercial concerné'
+            'Nous transférons votre demande au service commercial concerné'
+        ],
+        'client_not_found_end': [
+            'Votre numéro de locataire n\'existe pas dans notre base de données veuillez saisir une prédemande de logement sur le site Internet de Vilogia'
         ]
     }
 }
@@ -59,6 +62,7 @@ class HackVilogiaSkill:
         self._message = Message(SKILL_MESSAGES)
         self._current_incident = None
         self._current_client = None
+        self.numb_demand = 0
 
     def fallback_handler(self):
         return self.unmanaged_event
@@ -141,7 +145,8 @@ class HackVilogiaSkill:
         if intent_message.intent.intentName == INTENT_YES:
             if custom_data is not None:
                 if custom_data == 'CONFIRM_CLIENT_PHONE_NUMBER':
-                    message = self._message.get(
+                    message = 'Très bien {0} {1} '.format(self._current_client['firstName'], self._current_client['lastName'])
+                    message += self._message.get(
                         'transfer_to_tech_support') if self._current_incident.incidentType == IncidentType.Technical else self._message.get(
                         'transfer_to_sale_support')
                     dialog.end_session(session_id=intent_message.session_id, text=message)
@@ -162,7 +167,12 @@ class HackVilogiaSkill:
 
     def numero_locataire(self, intent_message, dialog):
 
+        if self.numb_demand == 3:
+            return dialog.end_session(session_id=intent_message.session_id,
+                                      text=self._message.get('client_not_found_end'))
+
         if self._current_incident is None:
+            self.numb_demand += 1
             return self.unmanaged_event(intent_message, dialog)
 
         self._logger.info("=> intent numero_locataire")
@@ -186,6 +196,8 @@ class HackVilogiaSkill:
                                         intent_filter=['smilehack:numeroLocataire', INTENT_NO, 'smilehack:smallTalk'],
                                         can_be_enqueued=True
                                         )
+
+        self.numb_demand += 1
 
     def pas_numero_locataire(self, intent_message, dialog):
         # Custom data to be used to know if the client number is mandatory or not
