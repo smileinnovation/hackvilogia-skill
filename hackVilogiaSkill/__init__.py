@@ -22,17 +22,17 @@ SKILL_MESSAGES = {
             "au revoir, à votre service"
         ],
         'mission': [
-            "Je suis l'assistant Vilogia. Pouvez-vous me décrire vous problème ?",
-            "Je suis l'assistant Vilogia. Vous pouvez me décrire votre problème et je vous transfèrerai au service concerné"
+            "Bonjour. Je suis l'assistant Vilogia. Pouvez-vous me décrire vous problème ?",
+            "Bonjour. Je suis l'assistant Vilogia. Vous pouvez me décrire votre problème et je vous transfèrerai au service concerné"
         ],
         'unknownSmallTalk': [
-            "Je ne suis pas sur de vous avoir compris... "
+            "Désolé. Je ne suis pas sur de vous avoir compris, veuillez répéter... "
         ],
         'ask_for_numero_client': [
-            "pouvez-vous me communiquer votre numéro de locataire s'il vous plait ?"
+            "Bonjour. Je suis l'assistant Vilogia. Merci, je comprends votre demande. Pouvez-vous me communiquer votre numéro de locataire unique s'il vous plait ?"
         ],
         'client_number_mandatory': [
-            'Désolé, mais nous ne pouvons pas traiter votre demande sans numéro de locataire'
+            'Désolé, mais nous ne pouvons pas traiter votre demande sans numéro de locataire. Je vous invite à pré remplir une demande de logement sur le site internet de Vilogia'
         ],
         'confirmClientPhoneNumber': [
             'pouvez-vous me confirmer que votre numéro de téléphone se termine par {} ?'
@@ -41,10 +41,10 @@ SKILL_MESSAGES = {
             'Désolé, mais je ne trouve pas de client avec le numéro {}'
         ],
         'transfer_to_tech_support': [
-            'Très bien. Nous transférons votre demande au service technique concerné'
+            'Très bien {}, votre demande concerne un problème lié au {}. Nous transférons votre demande au service technique concerné'
         ],
         'transfer_to_sale_support': [
-            'Très bien. Nous transférons votre demande au service commercial concerné'
+            'Très bien {}, votre demande concerne un problème lié au {}. Nous transférons votre demande au service commercial concerné'
         ]
     }
 }
