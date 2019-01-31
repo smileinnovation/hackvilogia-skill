@@ -29,13 +29,16 @@ SKILL_MESSAGES = {
             "Je suis l'assistant Vilogia. Vous pouvez me décrire votre problème et je vous transfèrerai au service concerné"
         ],
         'unknownSmallTalk': [
-            "Je ne suis pas sur de vous avoir compris... "
+            "Désolé. Je ne suis pas sur de vous avoir compris, veuillez répéter..."
+        ],
+        'request_confirmation': [
+            "Bonjour je suis l'assitant Vilogia, je vais traiter votre demande."
         ],
         'ask_for_numero_client': [
-            "pouvez-vous me communiquer votre numéro de locataire s'il vous plait ?"
+            "Pouvez-vous me communiquer votre numéro de locataire unique s'il vous plait ?"
         ],
         'client_number_mandatory': [
-            'Désolé, mais nous ne pouvons pas traiter votre demande sans numéro de locataire'
+            'Désolé, mais nous ne pouvons pas traiter votre demande sans numéro de locataire. Je vous invite à pré remplir une demande de logement sur le site internet de Vilogia'
         ],
         'confirmClientPhoneNumber': [
             'pouvez-vous me confirmer que votre numéro de téléphone se termine par {} ?'
@@ -238,7 +241,10 @@ class HackVilogiaSkill:
                 func([ { slotName : slots[slotName].value } ])
 
     def info_loyer_charge(self, intent_message, dialog):
-        self._logger.info("=> intent info_loyer_charge")
+        self._logger.info("=> intent info_loyer_charge {}".format(intent_message.intent.probability))
+
+        if intent_message.intent.probability < 0.55:
+            return self.unmanaged_event(intent_message, dialog)
 
         self.set_new_incident(intent_message, IncidentType.Sales)
 
@@ -246,14 +252,20 @@ class HackVilogiaSkill:
             print("----")
             self.display_slots(intent_message.slots)
 
-        dialog.continue_session(session_id=intent_message.session_id,
-                                text=self._message.get('ask_for_numero_client'),
-                                intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
-                                               INTENT_NO, 'smilehack:smallTalk']
-                                )
+        dialog.end_session(session_id=intent_message.session_id, text=self._message.get('request_confirmation'))
+        dialog.start_session_action(site_id='default',
+                                    text=self._message.get('ask_for_numero_client'),
+                                    intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient', INTENT_NO,
+                                                   'smilehack:smallTalk'],
+                                    can_be_enqueued=True
+                                    )
 
     def multiservice(self, intent_message, dialog):
-        self._logger.info("=> intent multiservice")
+        self._logger.info("=> intent multiservice {}".format(intent_message.intent.probability))
+
+        if intent_message.intent.probability < 0.55:
+            return self.unmanaged_event(intent_message, dialog)
+
         self.set_new_incident(intent_message, IncidentType.Technical)
         self.setArrayValueInIncident(intent_message.slots, 'Equipement', self._current_incident.setEquipments)
         self.setArrayValueInIncident(intent_message.slots, 'ProblemeEmplacement', self._current_incident.setPlaces)
@@ -263,11 +275,19 @@ class HackVilogiaSkill:
         if intent_message.slots is not None:
             print("----")
             self.display_slots(intent_message.slots)
-        dialog.continue_session(session_id=intent_message.session_id,
-                                text=self._message.get('ask_for_numero_client'),
-                                intent_filter = ['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
-                                                 INTENT_NO, 'smilehack:smallTalk']
-                                )
+        #dialog.continue_session(session_id=intent_message.session_id,
+        #                        text=self._message.get('ask_for_numero_client'),
+        #                        intent_filter = ['smilehack:numeroLocataire', 'smilehack:pasNumeroClient',
+        #                                         INTENT_NO, 'smilehack:smallTalk']
+        #                        )
+
+        dialog.end_session(session_id=intent_message.session_id, text=self._message.get('request_confirmation'))
+        dialog.start_session_action(site_id='default',
+                                    text=self._message.get('ask_for_numero_client'),
+                                    intent_filter=['smilehack:numeroLocataire', 'smilehack:pasNumeroClient', INTENT_NO,
+                                                   'smilehack:smallTalk'],
+                                    can_be_enqueued=True
+                                    )
 
 
 '''
