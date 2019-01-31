@@ -98,7 +98,7 @@ class HackVilogiaSkill:
         self._current_client = None
 
     def send_incident(self):
-        print(self._current_incident.to_JSON())
+        self._logger.info(self._current_incident.to_JSON())
 
     def how_are_you(self, intent_message, dialog):
         self._logger.info("=> intent how_are_you")
