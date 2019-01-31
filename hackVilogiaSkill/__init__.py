@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+import json
+import urllib.request
+import traceback
 from hackVilogiaSkill.message import Message
 from hackVilogiaSkill.clients import ClientMock
 from hackVilogiaSkill.incident import Incident, IncidentType, EmergencyLevel, Sentiment
@@ -98,7 +101,16 @@ class HackVilogiaSkill:
         self._current_client = None
 
     def send_incident(self):
-        self._logger.info(self._current_incident.to_JSON())
+        json = self._current_incident.to_JSON()
+        self._logger.info(json)
+        try:
+            url = 'http://192.168.2.1:3000/incidents'
+            req = urllib.request.Request(url, data=json.encode('utf8'), headers = {'content-type': 'application/json'})
+            response = urllib.request.urlopen(req)
+            print(response)
+        except:
+            print(traceback.format_exc())
+
 
     def how_are_you(self, intent_message, dialog):
         self._logger.info("=> intent how_are_you")
