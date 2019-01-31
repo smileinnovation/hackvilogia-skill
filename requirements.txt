@@ -9,4 +9,4 @@ pyzmq==16.0.2
 singledispatch==3.4.0.3
 six==1.11.0
 tornado==4.5.1
-paho-mqtt=1.4.0
+paho-mqtt==1.4.0
